@@ -1,7 +1,7 @@
 import { obtenerToken } from "./auth.service.js";
 import bcrypt from "bcryptjs";
 
-const endpoint = "http://localhost:3000/users";
+const endpoint = "https://proyectohs-5.onrender.com";
 
 function getHeaders() {
     const token = obtenerToken();

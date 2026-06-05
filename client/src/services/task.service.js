@@ -1,6 +1,6 @@
 import { obtenerToken } from "./auth.service.js";
 
-const endpoint = "http://localhost:3000/task";
+const endpoint = "https://proyectohs-5.onrender.com";
 
 function getHeaders() {
     const token = obtenerToken();
