@@ -32,7 +32,7 @@ export function renderRegister() {
                         </div>
                         <div class="rounded-2xl border border-cyan-500/20 bg-cyan-500/8 p-4">
                             <p class="text-2xl mb-1">⚡</p>
-                            <p class="text-xs font-semibold text-slate-300">Roles & Permisos</p>
+                            <p class="text-xs font-semibold text-slate-300">Roles &amp; Permisos</p>
                         </div>
                     </div>
                 </div>
@@ -75,19 +75,28 @@ export function renderRegister() {
                             <input id="register-email" type="email" placeholder="usuario@correo.com" class="field" />
                         </div>
 
-                        <div>
-                            <label class="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">${t("password")}</label>
-                            <input id="register-password" type="password" placeholder="••••••••" class="field" />
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">${t("password")}</label>
+                                <input id="register-password" type="password" placeholder="••••••••" class="field" />
+                            </div>
+                            <div>
+                                <label class="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">${t("role")}</label>
+                                <select id="register-role" class="field">
+                                    <option value="USER">USER</option>
+                                    <option value="ADMIN">ADMIN</option>
+                                </select>
+                            </div>
                         </div>
 
-                        <!-- Admin secret key (optional) -->
-                        <div class="relative">
-                            <label class="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-400">
-                                <svg class="h-3.5 w-3.5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                                Clave de administrador <span class="normal-case text-slate-500 font-normal">(opcional)</span>
+                        <!-- Admin key field — hidden by default, shown when ADMIN is selected -->
+                        <div id="admin-key-wrapper" style="display:none;">
+                            <label class="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-amber-400">
+                                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                Clave de administrador
                             </label>
-                            <input id="register-adminkey" type="password" placeholder="Solo si eres administrador" class="field" />
-                            <p class="mt-1.5 text-xs text-slate-500">Déjala en blanco para registrarte como usuario normal.</p>
+                            <input id="register-adminkey" type="password" placeholder="Ingresa la clave secreta" class="field" style="border-color: rgba(245,158,11,0.4);" />
+                            <p class="mt-1.5 text-xs text-slate-500">Necesitas la clave para registrarte con rol ADMIN.</p>
                         </div>
 
                         <button id="register-btn" type="button" class="btn-primary w-full">
@@ -109,16 +118,42 @@ export function setupRegister() {
     const registerBtn = document.getElementById("register-btn");
     if (!registerBtn) return;
 
+    // Show/hide admin key field when role changes
+    const roleSelect = document.getElementById("register-role");
+    const adminKeyWrapper = document.getElementById("admin-key-wrapper");
+
+    roleSelect?.addEventListener("change", () => {
+        if (roleSelect.value === "ADMIN") {
+            adminKeyWrapper.style.display = "block";
+        } else {
+            adminKeyWrapper.style.display = "none";
+            document.getElementById("register-adminkey").value = "";
+        }
+    });
+
     registerBtn.addEventListener("click", async () => {
         const name     = document.getElementById("register-name").value.trim();
         const lastName = document.getElementById("register-lastname").value.trim();
         const email    = document.getElementById("register-email").value.trim();
         const password = document.getElementById("register-password").value.trim();
-        const adminKey = document.getElementById("register-adminkey").value.trim();
+        const role     = document.getElementById("register-role").value;
+        const adminKey = document.getElementById("register-adminkey")?.value.trim() || "";
 
         if (!name || !lastName || !email || !password) {
             Swal.fire({ icon: "warning", title: t("fields_incomplete"), text: t("register_incomplete_desc"), confirmButtonColor: "#7c3aed" });
             return;
+        }
+
+        // If ADMIN selected, validate the secret key before calling the server
+        if (role === "ADMIN") {
+            if (!adminKey) {
+                Swal.fire({ icon: "warning", title: "Clave requerida", text: "Debes ingresar la clave de administrador para registrarte con ese rol.", confirmButtonColor: "#d97706" });
+                return;
+            }
+            if (adminKey !== "riwi") {
+                Swal.fire({ icon: "error", title: "Clave incorrecta", text: "La clave de administrador no es válida.", confirmButtonColor: "#7c3aed" });
+                return;
+            }
         }
 
         // Show loading while server wakes up (Render free tier can take ~30-60s)
@@ -132,7 +167,7 @@ export function setupRegister() {
         registerBtn.disabled = true;
 
         try {
-            const newUser = await crearUsuario({ name, lastName, email, password, adminKey: adminKey || undefined });
+            const newUser = await crearUsuario({ name, lastName, email, password, adminKey: role === "ADMIN" ? adminKey : undefined });
             const roleMsg = newUser.role === "ADMIN" ? " ¡Bienvenido, Administrador!" : "";
             Swal.fire({ icon: "success", title: t("register_success") + roleMsg, text: t("register_success_desc"), timer: 1800, showConfirmButton: false });
             setTimeout(() => navigate("/login"), 1000);
