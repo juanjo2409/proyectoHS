@@ -1,4 +1,4 @@
-import { crearUsuario, obtenerUsuarioPorEmail } from "../../services/users.service.js";
+import { crearUsuario } from "../../services/users.service.js";
 import { navigate } from "../../router/router.js";
 import { themeToggleButtonHtml, setupThemeToggle } from "../../utils/theme.js";
 import { t, getLangSelectHtml, setupLangSelect } from "../../utils/i18n.js";
@@ -120,11 +120,6 @@ export function setupRegister() {
             return;
         }
         try {
-            const usuarioExistente = await obtenerUsuarioPorEmail(email);
-            if (usuarioExistente) {
-                Swal.fire({ icon: "error", title: t("email_in_use"), text: t("email_in_use_desc"), confirmButtonColor: "#7c3aed" });
-                return;
-            }
             await crearUsuario({ name, lastName, email, password, role });
             Swal.fire({ icon: "success", title: t("register_success"), text: t("register_success_desc"), timer: 1500, showConfirmButton: false });
             setTimeout(() => navigate("/login"), 1000);

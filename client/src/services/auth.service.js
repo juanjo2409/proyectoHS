@@ -1,62 +1,40 @@
-import { obtenerUsuarioPorEmail } from "./users.service.js";
-import bcrypt from "bcryptjs";
+const API_URL = "https://proyectohs-5.onrender.com";
 
-// Helper for Base64Url encoding
-function base64url(source) {
-    const jsonStr = JSON.stringify(source);
-    const base64 = btoa(encodeURIComponent(jsonStr).replace(/%([0-9A-F]{2})/g, (match, p1) => {
-        return String.fromCharCode(parseInt(p1, 16));
-    }));
-    return base64.replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-}
-
-// Helper for Base64Url decoding
+// Helper for Base64Url decoding (to read JWT payload from server)
 function decodeBase64url(str) {
     let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
     while (base64.length % 4) {
         base64 += '=';
     }
-    const raw = atob(base64);
-    const jsonStr = decodeURIComponent(raw.split('').map(c => {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
-    return JSON.parse(jsonStr);
+    try {
+        const raw = atob(base64);
+        const jsonStr = decodeURIComponent(raw.split('').map(c => {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonStr);
+    } catch (e) {
+        return null;
+    }
 }
 
 export async function login(email, password) {
-    const user = await obtenerUsuarioPorEmail(email);
+    const response = await fetch(`${API_URL}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+    });
 
-    if (!user) {
-        throw new Error("Usuario no encontrado");
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.message || "Error al iniciar sesión");
     }
 
-    // Support both bcrypt hashes (starts with $2a$ or $2b$) and original plain text passwords
-    const isHashed = user.password.startsWith("$2a$") || user.password.startsWith("$2b$");
-    const passwordMatches = isHashed 
-        ? bcrypt.compareSync(password, user.password)
-        : user.password === password;
+    // Server returns { token, user }
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("user", JSON.stringify(data.user));
 
-    if (!passwordMatches) {
-        throw new Error("Contraseña incorrecta");
-    }
-
-    // Generate local JWT token (2 hours expiration)
-    const header = { alg: "HS256", typ: "JWT" };
-    const payload = {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        name: user.name,
-        lastName: user.lastName,
-        exp: Math.floor(Date.now() / 1000) + 7200
-    };
-
-    const token = `${base64url(header)}.${base64url(payload)}.client_signed_token`;
-
-    localStorage.setItem("token", token);
-    localStorage.setItem("user", JSON.stringify(user));
-
-    return user;
+    return data.user;
 }
 
 export function cerrarSesion() {
@@ -72,9 +50,10 @@ export function obtenerUsuarioActual() {
     try {
         const parts = token.split('.');
         if (parts.length !== 3) return null;
-        
+
         const decoded = decodeBase64url(parts[1]);
-        
+        if (!decoded) return null;
+
         // Expiration check
         if (decoded.exp && decoded.exp < Date.now() / 1000) {
             cerrarSesion();

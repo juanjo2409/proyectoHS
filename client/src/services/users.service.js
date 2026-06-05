@@ -1,7 +1,7 @@
 import { obtenerToken } from "./auth.service.js";
-import bcrypt from "bcryptjs";
 
 const endpoint = "https://proyectohs-5.onrender.com";
+
 
 function getHeaders() {
     const token = obtenerToken();
@@ -15,19 +15,13 @@ function getHeaders() {
 }
 
 export async function crearUsuario(usuario) {
-    // Generate secure hashed password on registration
-    const hashedPassword = bcrypt.hashSync(usuario.password, 10);
-    const usuarioConHash = {
-        ...usuario,
-        password: hashedPassword
-    };
-
-    const response = await fetch(endpoint, {
+    // Send plain password — the server (/register) handles hashing
+    const response = await fetch(`${endpoint}/register`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify(usuarioConHash)
+        body: JSON.stringify(usuario)
     });
 
     if (!response.ok) {
@@ -39,7 +33,7 @@ export async function crearUsuario(usuario) {
 }
 
 export async function obtenerUsuarios() {
-    const response = await fetch(endpoint, {
+    const response = await fetch(`${endpoint}/users`, {
         method: "GET",
         headers: getHeaders()
     });
@@ -53,7 +47,7 @@ export async function obtenerUsuarios() {
 }
 
 export async function obtenerUsuarioPorId(id) {
-    const response = await fetch(`${endpoint}/${id}`, {
+    const response = await fetch(`${endpoint}/users/${id}`, {
         method: "GET",
         headers: getHeaders()
     });
@@ -67,7 +61,7 @@ export async function obtenerUsuarioPorId(id) {
 }
 
 export async function obtenerUsuarioPorEmail(email) {
-    const response = await fetch(`${endpoint}?email=${email}`, {
+    const response = await fetch(`${endpoint}/users?email=${encodeURIComponent(email)}`, {
         method: "GET",
         headers: getHeaders()
     });
@@ -82,12 +76,8 @@ export async function obtenerUsuarioPorEmail(email) {
 }
 
 export async function actualizarUsuario(id, datos) {
-    // Hash password if updating and not already hashed
-    if (datos.password && !datos.password.startsWith("$2a$") && !datos.password.startsWith("$2b$")) {
-        datos.password = bcrypt.hashSync(datos.password, 10);
-    }
-
-    const response = await fetch(`${endpoint}/${id}`, {
+    // Send plain password — the server handles hashing on PUT/PATCH
+    const response = await fetch(`${endpoint}/users/${id}`, {
         method: "PUT",
         headers: getHeaders(),
         body: JSON.stringify(datos)
@@ -110,7 +100,7 @@ export async function actualizarRolUsuario(id, nuevoRol) {
 }
 
 export async function eliminarUsuario(id) {
-    const response = await fetch(`${endpoint}/${id}`, {
+    const response = await fetch(`${endpoint}/users/${id}`, {
         method: "DELETE",
         headers: getHeaders()
     });

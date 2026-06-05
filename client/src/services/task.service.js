@@ -14,7 +14,7 @@ function getHeaders() {
 }
 
 export async function obtenerTareas() {
-    const response = await fetch(endpoint, {
+    const response = await fetch(`${endpoint}/task`, {
         method: "GET",
         headers: getHeaders()
     });
@@ -28,7 +28,7 @@ export async function obtenerTareas() {
 }
 
 export async function obtenerTareaPorId(id) {
-    const response = await fetch(`${endpoint}/${id}`, {
+    const response = await fetch(`${endpoint}/task/${id}`, {
         method: "GET",
         headers: getHeaders()
     });
@@ -42,7 +42,7 @@ export async function obtenerTareaPorId(id) {
 }
 
 export async function crearTarea({ title, description, status, date, userId }) {
-    const response = await fetch(endpoint, {
+    const response = await fetch(`${endpoint}/task`, {
         method: "POST",
         headers: getHeaders(),
         body: JSON.stringify({ title, description, status, date, userId })
@@ -57,7 +57,7 @@ export async function crearTarea({ title, description, status, date, userId }) {
 }
 
 export async function actualizarTarea(id, datos) {
-    const response = await fetch(`${endpoint}/${id}`, {
+    const response = await fetch(`${endpoint}/task/${id}`, {
         method: "PUT",
         headers: getHeaders(),
         body: JSON.stringify(datos)
@@ -72,7 +72,7 @@ export async function actualizarTarea(id, datos) {
 }
 
 export async function eliminarTarea(id) {
-    const response = await fetch(`${endpoint}/${id}`, {
+    const response = await fetch(`${endpoint}/task/${id}`, {
         method: "DELETE",
         headers: getHeaders()
     });
