@@ -1,41 +1,40 @@
 # TaskFlow SPA — Frontend Cliente
 
-> Cliente Single Page Application (SPA) moderno y fluido construido con JavaScript Vanilla y Tailwind CSS v4, diseñado bajo una arquitectura limpia por capas.
+> Cliente Single Page Application moderno construido con JavaScript Vanilla y Tailwind CSS v4 — desplegado en **Vercel**.
+
+![Deploy](https://img.shields.io/badge/Desplegado%20en-Vercel-black?logo=vercel)
+
+**URL en producción:** https://proyectohs.vercel.app
 
 ---
 
 ## 🛠️ Stack Tecnológico
 
 - **Lenguaje:** JavaScript ES Modules (ES2022+)
-- **Estilos:** Tailwind CSS v4 (Compilado nativamente con el plugin oficial de Vite)
+- **Estilos:** Tailwind CSS v4 (compilado con el plugin oficial de Vite)
 - **Empaquetador & Dev Server:** Vite 8
 - **Enrutamiento:** History API nativa del navegador
 - **Modales & Notificaciones:** SweetAlert2
 
 ---
 
-## 🚀 Inicio Rápido
+## 🚀 Despliegue en Vercel
 
-### 1. Instalar dependencias
-Desde este directorio (`/client`), ejecuta:
-```bash
-npm install
-```
+El frontend se despliega automáticamente en Vercel desde la rama `main`.
 
-### 2. Iniciar en modo desarrollo
-Arranca el servidor local con Hot Module Replacement (HMR):
-```bash
-npm run dev
-```
-La aplicación se abrirá en la dirección que indique Vite (típicamente **http://localhost:5173**).
+| Configuración | Valor |
+|---|---|
+| Framework preset | Vite |
+| Root directory | `client` |
+| Build command | `npm run build` |
+| Output directory | `dist` |
+| URL pública | https://proyectohs.vercel.app |
 
-> 💡 **Nota:** Para que la autenticación y las tareas funcionen, debes tener corriendo la [API backend](../api/README.md) en el puerto 3000.
+Cada `git push` a `main` lanza un redespliegue automático.
 
 ---
 
 ## 📂 Arquitectura del Código
-
-La aplicación sigue una organización estructurada en capas para facilitar su mantenimiento sin frameworks:
 
 ```
 client/src/
@@ -44,50 +43,81 @@ client/src/
 │   └── global.css      # Sistema de diseño: variables, animaciones, clases personalizadas.
 ├── router/
 │   ├── router.js       # Motor de rutas SPA con guards de sesión y rol.
-│   └── routes.js       # Definición de rutas (componentes, títulos, metadatos).
+│   └── routes.js       # Definición de rutas (vistas, guards, metadatos).
 ├── services/
-│   ├── auth.service.js # Control de login, registro y tokens JWT.
-│   ├── task.service.js # CRUD completo de tareas conectando a la API.
-│   └── users.service.js# CRUD de usuarios (administrador).
+│   ├── auth.service.js # Login via POST /login y gestión de JWT en localStorage.
+│   ├── task.service.js # CRUD completo de tareas (GET/POST/PUT/DELETE /task).
+│   └── users.service.js# CRUD de usuarios (GET/PUT/DELETE /users, POST /register).
 ├── utils/
 │   ├── theme.js        # Gestor de tema claro/oscuro y persistencia.
-│   └── i18n.js         # Diccionario de idiomas (ES/EN) y formateadores.
+│   └── i18n.js         # Diccionario ES/EN y formateadores de texto.
 └── views/
     ├── home.js         # Landing page pública.
     ├── notFound.js     # Página 404 personalizada.
     ├── auth/           # Vistas de autenticación (login, registro).
-    ├── app/            # Panel principal / Dashboard de estadísticas.
-    ├── tasks/          # Listado y formularios de tareas.
-    └── admin/          # Panel de control de administrador y gestión de perfil.
+    ├── app/            # Dashboard de estadísticas.
+    ├── tasks/          # Listado y formulario de tareas.
+    └── admin/          # Panel de administrador y perfil de usuario.
 ```
 
 ---
 
 ## ⚙️ Características Frontend Clave
 
-### 1. Enrutador SPA Personalizado ([router.js](file:///c:/Users/juanj/Desktop/TaskFlowSPA/client/src/router/router.js))
-En lugar de recargar la página, interceptamos los clics en enlaces (`<a>`) y usamos `window.history.pushState` para cambiar de vista de forma instantánea.
-Admite **Guardias de Ruta**:
-- Evita que usuarios no autenticados entren a pantallas privadas (`requiresAuth`).
-- Evita que usuarios con rol `USER` entren a la pantalla del administrador (`requiresAdmin`).
-- Redirige al dashboard si intentas entrar a `/login` estando ya autenticado (`redirectAuthenticated`).
+### 1. Enrutador SPA Personalizado ([router.js](./src/router/router.js))
+Intercepta clics en `<a>` y usa `window.history.pushState` para navegar sin recargar la página. Admite **Guards de Ruta**:
+- `requiresAuth` — redirige a `/login` si no hay token válido.
+- `requiresAdmin` — redirige a `/dashboard` si el rol no es `ADMIN`.
+- `redirectAutenticated` — redirige a `/dashboard` si ya hay sesión activa.
 
 ### 2. Ciclo de Vida de las Vistas (Render + Setup)
-Cada vista de la SPA cuenta con dos etapas esenciales:
-- **`render()`:** Retorna un string con la estructura HTML pura de la página.
-- **`setup()`:** Se ejecuta inmediatamente después de inyectar el HTML en el DOM. Aquí es donde se enlazan los escuchadores de eventos (`click`, `submit`), se realizan las llamadas fetch asíncronas y se inician complementos visuales.
+- **`render()`:** Retorna el HTML de la vista como string.
+- **`setup()`:** Se ejecuta tras inyectar el HTML. Enlaza eventos, hace peticiones `fetch` y activa plugins visuales.
 
-### 3. Soporte de Idiomas Integrado ([i18n.js](file:///c:/Users/juanj/Desktop/TaskFlowSPA/client/src/utils/i18n.js))
-Contiene un mapa de traducción en formato clave-valor para Español e Inglés. El idioma activo se lee y se persiste en `localStorage` con la clave `lang`. Cambiar de idioma vuelve a renderizar la vista actual de inmediato.
+### 3. Autenticación con JWT real ([auth.service.js](./src/services/auth.service.js))
+El login envía las credenciales al servidor (`POST /login`), que devuelve un JWT firmado. El token se almacena en `localStorage` y se adjunta automáticamente como `Authorization: Bearer <token>` en cada petición posterior.
 
-### 4. Modo Oscuro/Claro Inteligente ([theme.js](file:///c:/Users/juanj/Desktop/TaskFlowSPA/client/src/utils/theme.js))
-El modo oscuro añade la clase `.dark` a la etiqueta `<html>`. El tema se lee al iniciar para evitar destellos blancos y se almacena en la clave `theme` de `localStorage`.
-- Los estilos utilitarios de Tailwind y las directivas de sobreescritura de contraste en [global.css](file:///c:/Users/juanj/Desktop/TaskFlowSPA/client/src/styles/global.css) garantizan que todos los elementos se adapten automáticamente conservando una legibilidad perfecta.
+### 4. Soporte de Idiomas Integrado ([i18n.js](./src/utils/i18n.js))
+Mapa de traducción clave-valor para Español e Inglés. El idioma activo se persiste en `localStorage` (`lang`). Cambiar de idioma vuelve a renderizar la vista actual.
+
+### 5. Modo Oscuro/Claro Inteligente ([theme.js](./src/utils/theme.js))
+Añade/quita la clase `.dark` en `<html>`. El tema se lee al iniciar para evitar destellos y se persiste en `localStorage` (`theme`).
 
 ---
 
-## 📦 Scripts Disponibles
+## 🔗 Conexión con el Backend
 
-- `npm run dev`: Inicia el entorno de desarrollo.
-- `npm run build`: Empaqueta la aplicación optimizada para producción dentro del directorio `/dist`.
-- `npm run preview`: Ejecuta un servidor local para previsualizar la compilación de producción.
+Todos los servicios apuntan a la API en Render:
+
+```
+https://proyectohs-5.onrender.com
+```
+
+| Servicio | Archivo | Endpoints que usa |
+|---|---|---|
+| Autenticación | `auth.service.js` | `POST /login` |
+| Usuarios | `users.service.js` | `POST /register`, `GET/PUT/DELETE /users/:id` |
+| Tareas | `task.service.js` | `GET/POST/PUT/DELETE /task` |
+
+---
+
+## 💻 Desarrollo local
+
+```bash
+cd client
+npm install
+npm run dev
+# App en http://localhost:5173
+```
+
+> 💡 Para desarrollo local, asegúrate de que el backend (`/api`) esté corriendo en `http://localhost:3000` y actualiza la constante `API_URL`/`endpoint` en los archivos de servicios.
+
+---
+
+## 📦 Scripts
+
+```bash
+npm run dev      # Servidor de desarrollo con HMR
+npm run build    # Build de producción en /dist
+npm run preview  # Vista previa del build de producción
+```

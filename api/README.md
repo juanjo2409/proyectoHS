@@ -1,76 +1,108 @@
 # TaskFlow SPA — API Backend
 
-> Backend de desarrollo ligero que expone una API REST con autenticación JWT, encriptación Bcrypt y validación de roles/permisos.
+> Backend REST con autenticación JWT y hash de contraseñas — desplegado en **Render**.
+
+![Deploy](https://img.shields.io/badge/Desplegado%20en-Render-46E3B7?logo=render)
+
+**URL en producción:** `https://proyectohs-5.onrender.com`
 
 ---
 
 ## 🛠️ Stack Tecnológico
 
 - **Runtime:** Node.js (v18+)
-- **Base de datos de desarrollo:** `json-server` (Mapea un archivo `db.json` a endpoints REST)
-- **Autenticación:** `jsonwebtoken` (Para firmar y verificar tokens de acceso)
-- **Seguridad:** `bcryptjs` (Para el hashing seguro de contraseñas)
-- **CORS:** `cors` (Habilitado para permitir la comunicación del cliente SPA)
+- **Base de datos:** `json-server` v0.17 (mapea `db.json` a endpoints REST)
+- **Autenticación:** `jsonwebtoken` (firma y verifica tokens JWT — 2h de expiración)
+- **Seguridad:** `bcryptjs` (hashing seguro de contraseñas con salt 10)
+- **CORS:** `cors` (habilitado para permitir peticiones del frontend en Vercel)
 
 ---
 
-## 🚀 Inicio Rápido
+## 🚀 Despliegue en Render
 
-### 1. Instalar dependencias
-Desde esta carpeta (`/api`), ejecuta:
-```bash
-npm install
-```
+La API está desplegada como **Web Service** en Render.
 
-### 2. Iniciar el servidor
-Arranca la API en modo de desarrollo:
-```bash
-npm start
-```
-El servidor estará corriendo en **http://localhost:3000**.
+| Configuración | Valor |
+|---|---|
+| Start command | `node server.js` |
+| Root directory | `api` |
+| Puerto | Inyectado por Render vía `PORT` |
+| URL pública | `https://proyectohs-5.onrender.com` |
+
+> ⚠️ **Plan gratuito:** El servidor se suspende tras 15 min de inactividad. La primera petición puede tardar hasta 60 segundos mientras despierta.
+
+> ⚠️ **Datos efímeros:** En el plan gratuito, el sistema de archivos se resetea con cada redespliegue. Los datos persisten solo mientras el servidor está corriendo. Los datos base provienen del `db.json` commiteado en el repo.
 
 ---
 
 ## 📝 Base de Datos (`db.json`)
-El archivo `db.json` actúa como base de datos local y almacena las colecciones de:
-- `users`: Colección de usuarios. Las contraseñas creadas mediante la aplicación se guardan automáticamente hasheadas por Bcrypt.
-- `task`: Colección de tareas del sistema, vinculadas a su respectivo propietario a través de `userId`.
+
+El archivo `db.json` actúa como base de datos y almacena:
+- **`users`**: Colección de usuarios. Las contraseñas se guardan hasheadas con Bcrypt.
+- **`task`**: Colección de tareas vinculadas a su propietario mediante `userId`.
+
+Datos iniciales incluidos en el repo (contraseñas hasheadas con bcrypt):
+
+| Email | Rol |
+|---|---|
+| `juanjosemn63@gmail.com` | ADMIN |
+| `kim3@gmail.com` | USER |
+| `robleskeyner8@gmail.com` | USER |
 
 ---
 
 ## 🔒 Flujo de Autenticación y Autorización
 
-El archivo principal [server.js](file:///c:/Users/juanj/Desktop/TaskFlowSPA/api/server.js) implementa tres capas principales de seguridad:
+El archivo [server.js](./server.js) implementa tres capas de seguridad:
 
-### 1. Endpoints Públicos
-- `POST /register`: Hashea la contraseña recibida con Bcrypt (`bcrypt.hashSync(password, 10)`) y guarda el usuario con rol `USER` por defecto.
-- `POST /login`: Valida las credenciales. Si coinciden, genera y firma un token JWT que expira en 2 horas (`expiresIn: '2h'`), devolviendo el token y los datos seguros del usuario (removiendo la contraseña del objeto).
+### 1. Endpoints Públicos (sin token)
+- `POST /register`: Hashea la contraseña con `bcrypt.hashSync(password, 10)` y guarda el usuario con rol `USER` por defecto.
+- `POST /login`: Valida credenciales, genera y firma un JWT (`expiresIn: '2h'`), devuelve el token y datos del usuario sin contraseña.
 
 ### 2. Middleware de Verificación JWT
-Cualquier otra ruta requiere la cabecera `Authorization: Bearer <token>`. El servidor decodifica el token con la clave secreta y añade el usuario desencriptado al objeto de petición (`req.user = decoded`).
+Cualquier ruta fuera de `/login` y `/register` requiere `Authorization: Bearer <token>`. El servidor decodifica el token y añade el usuario a `req.user`.
 
-### 3. Middleware de Roles y Permisos (Evita IDOR)
-- **Acceso a Usuarios (`/users`):**
-  - Un usuario con rol `ADMIN` puede listar, ver, editar y eliminar cualquier usuario.
-  - Un usuario con rol `USER` solo puede consultar, editar o eliminar **su propio** registro (comparando el ID de la ruta con el del token).
-- **Acceso a Tareas (`/task`):**
-  - Si un `USER` hace un `GET /task`, el servidor reescribe silenciosamente la consulta para añadir `userId = req.user.id`, previniendo que lea tareas ajenas.
-  - Si se intenta editar (`PUT`), parchear (`PATCH`) o eliminar (`DELETE`) una tarea específica, el servidor consulta la base de datos y rechaza la petición con `403 Forbidden` si la tarea no le pertenece al usuario autenticado (a menos que sea `ADMIN`).
+### 3. Middleware de Roles y Permisos (prevención IDOR)
+- **`/users`:** Un `USER` solo puede consultar/editar/eliminar su propio registro. Un `ADMIN` tiene acceso total.
+- **`/task`:** Los `GET` de un `USER` se filtran automáticamente por `userId`. Los `PUT`/`DELETE` verifican que la tarea pertenezca al usuario autenticado.
 
 ---
 
 ## 📡 Endpoints de la API
 
-| Método | Endpoint | Cabecera Auth | Permiso Requerido | Descripción |
-| :--- | :--- | :--- | :--- | :--- |
-| **POST** | `/login` | No | Público | Valida credenciales y entrega el JWT |
-| **POST** | `/register` | No | Público | Registra un usuario y hashea su contraseña |
-| **GET** | `/users` | Sí | `ADMIN` | Obtiene la lista de todos los usuarios |
-| **GET** | `/users/:id` | Sí | `ADMIN` o Propietario | Obtiene la información de un usuario específico |
-| **PUT** | `/users/:id` | Sí | `ADMIN` o Propietario | Actualiza los datos de un usuario |
-| **DELETE** | `/users/:id` | Sí | `ADMIN` o Propietario | Elimina una cuenta de usuario |
-| **GET** | `/task` | Sí | Cualquiera | Obtiene las tareas (Propias para USER; Todas para ADMIN) |
-| **POST** | `/task` | Sí | Cualquiera | Crea una nueva tarea |
-| **PUT** | `/task/:id` | Sí | `ADMIN` o Propietario | Edita todos los campos de una tarea |
-| **PATCH**| `/task/:id` | Sí | `ADMIN` o Propietario | Edita parcialmente una tarea |
-| **DELETE**| `/task/:id` | Sí | `ADMIN` o Propietario | Elimina una tarea |
+Base URL: `https://proyectohs-5.onrender.com`
+
+| Método | Endpoint | Auth requerida | Permiso | Descripción |
+|---|---|---|---|---|
+| `POST` | `/login` | ❌ | Público | Valida credenciales y entrega JWT |
+| `POST` | `/register` | ❌ | Público | Registra usuario con contraseña hasheada |
+| `GET` | `/users` | ✅ | `ADMIN` | Lista todos los usuarios |
+| `GET` | `/users/:id` | ✅ | ADMIN o Propietario | Obtiene un usuario |
+| `PUT` | `/users/:id` | ✅ | ADMIN o Propietario | Actualiza usuario |
+| `DELETE` | `/users/:id` | ✅ | ADMIN o Propietario | Elimina usuario |
+| `GET` | `/task` | ✅ | Cualquiera | Tareas propias (USER) o todas (ADMIN) |
+| `POST` | `/task` | ✅ | Cualquiera | Crea tarea |
+| `PUT` | `/task/:id` | ✅ | ADMIN o Propietario | Edita tarea |
+| `PATCH` | `/task/:id` | ✅ | ADMIN o Propietario | Edita parcialmente tarea |
+| `DELETE` | `/task/:id` | ✅ | ADMIN o Propietario | Elimina tarea |
+
+---
+
+## 💻 Desarrollo local
+
+```bash
+cd api
+npm install
+npm start
+# Servidor en http://localhost:3000
+```
+
+> Recuerda actualizar la `API_URL` en los servicios del cliente para que apunten a `http://localhost:3000` en lugar de la URL de Render.
+
+---
+
+## Scripts
+
+```bash
+npm start   # node server.js — inicia la API
+```

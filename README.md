@@ -2,29 +2,43 @@
 
 > Sistema de gestión de tareas moderno — Single Page Application construida con JavaScript Vanilla, Tailwind CSS v4 y una API REST con JWT.
 
+![Frontend](https://img.shields.io/badge/Frontend-Vercel-black?logo=vercel)
+![Backend](https://img.shields.io/badge/Backend-Render-46E3B7?logo=render)
+![License](https://img.shields.io/badge/License-MIT-violet)
+
+---
+
+## 🌐 Demo en producción
+
+| Servicio | URL |
+|---|---|
+| 🖥️ **Frontend (Vercel)** | [taskflow-spa en Vercel](https://proyectohs.vercel.app) |
+| ⚙️ **Backend API (Render)** | https://proyectohs-5.onrender.com |
+
+> ⚠️ El backend corre en **Render plan gratuito**. Si lleva un rato sin usarse, la primera petición puede tardar hasta **60 segundos** mientras el servidor despierta. Es normal — la app muestra un indicador de carga durante ese tiempo.
+
 ---
 
 ## Tabla de contenidos
 
 - [Descripción](#descripción)
-- [Demo rápida](#demo-rápida)
+- [Demo en producción](#-demo-en-producción)
+- [Rutas disponibles](#rutas-disponibles)
 - [Stack tecnológico](#stack-tecnológico)
 - [Estructura del proyecto](#estructura-del-proyecto)
 - [Características implementadas](#características-implementadas)
 - [Roles y permisos](#roles-y-permisos)
-- [Inicio rápido](#inicio-rápido)
-- [Variables de entorno y configuración](#variables-de-entorno-y-configuración)
-- [Arquitectura frontend](#arquitectura-frontend)
+- [Despliegue](#despliegue)
+- [Desarrollo local](#desarrollo-local)
 - [API — Endpoints disponibles](#api--endpoints-disponibles)
 - [Persistencia en localStorage](#persistencia-en-localstorage)
-- [Scripts disponibles](#scripts-disponibles)
 - [Licencia](#licencia)
 
 ---
 
 ## Descripción
 
-**TaskFlow SPA** es una aplicación web completamente funcional que simula un sistema de productividad y gestión de tareas. Su objetivo pedagógico es demostrar cómo construir una SPA robusta con JavaScript Vanilla sin depender de frameworks como React, Vue o Angular, aplicando buenas prácticas de arquitectura frontend por capas.
+**TaskFlow SPA** es una aplicación web completamente funcional que simula un sistema de productividad y gestión de tareas. Demuestra cómo construir una SPA robusta con JavaScript Vanilla sin depender de frameworks como React, Vue o Angular, aplicando buenas prácticas de arquitectura frontend por capas.
 
 La aplicación cuenta con:
 
@@ -36,7 +50,7 @@ La aplicación cuenta con:
 
 ---
 
-## Demo rápida
+## Rutas disponibles
 
 | Vista | Ruta | Rol requerido |
 |---|---|---|
@@ -45,7 +59,7 @@ La aplicación cuenta con:
 | Registro | `/register` | Público |
 | Dashboard | `/dashboard` | USER / ADMIN |
 | Mis tareas | `/tasks` | USER / ADMIN |
-| Crear / Editar tarea | `/task-form` | USER / ADMIN |
+| Crear / Editar tarea | `/tasks/new` | USER / ADMIN |
 | Mi perfil | `/profile` | USER / ADMIN |
 | Panel Admin | `/admin` | ADMIN |
 | 404 | `*` | — |
@@ -54,7 +68,7 @@ La aplicación cuenta con:
 
 ## Stack tecnológico
 
-### Frontend — `/client`
+### Frontend — `/client` → desplegado en Vercel
 
 | Tecnología | Versión | Rol |
 |---|---|---|
@@ -64,12 +78,12 @@ La aplicación cuenta con:
 | SweetAlert2 | ^11.26 | Modales y alertas |
 | History API | Nativa | Routing SPA |
 
-### Backend — `/api`
+### Backend — `/api` → desplegado en Render
 
 | Tecnología | Versión | Rol |
 |---|---|---|
 | Node.js | ≥18 | Entorno de ejecución |
-| json-server | ^1.0.0-beta.15 | Base de datos fake |
+| json-server | ^0.17.4 | Base de datos fake REST |
 | jsonwebtoken | ^9.0 | Generación / verificación JWT |
 | bcryptjs | ^3.0 | Hash de contraseñas |
 | cors | ^2.8 | Manejo de CORS |
@@ -80,12 +94,12 @@ La aplicación cuenta con:
 
 ```
 TaskFlowSPA/
-├── api/                        # Backend fake con JWT
+├── api/                        # Backend fake con JWT → Render
 │   ├── server.js               # Servidor Express + json-server + JWT
 │   ├── db.json                 # Base de datos (usuarios y tareas)
 │   └── package.json
 │
-└── client/                     # SPA frontend
+└── client/                     # SPA frontend → Vercel
     ├── index.html
     ├── vite.config.ts
     ├── package.json
@@ -94,11 +108,12 @@ TaskFlowSPA/
         ├── styles/
         │   └── global.css      # Sistema de diseño: tokens, glassmorphism, modos
         ├── router/
-        │   └── router.js       # Router SPA con guards de autenticación y rol
+        │   ├── router.js       # Router SPA con guards de autenticación y rol
+        │   └── routes.js       # Definición de rutas y metadatos
         ├── services/
-        │   ├── auth.service.js     # Login, registro, sesión activa
-        │   ├── task.service.js     # CRUD de tareas
-        │   └── users.service.js    # CRUD de usuarios (admin)
+        │   ├── auth.service.js     # Login, sesión activa (usa POST /login)
+        │   ├── task.service.js     # CRUD de tareas (usa /task)
+        │   └── users.service.js    # CRUD de usuarios (usa /users, /register)
         ├── utils/
         │   ├── theme.js        # Toggle modo oscuro/claro + initTheme
         │   └── i18n.js         # Traducciones ES/EN + getLangSelectHtml
@@ -123,8 +138,8 @@ TaskFlowSPA/
 ## Características implementadas
 
 ### Autenticación y sesión
-- [x] Registro con hash de contraseña (`bcryptjs`)
-- [x] Login con generación de **JWT** (expira en 2 h)
+- [x] Registro con hash de contraseña (`bcryptjs`) — procesado en el servidor
+- [x] Login con generación de **JWT real** en el backend (expira en 2 h)
 - [x] Sesión persistida en `localStorage`
 - [x] Cierre de sesión con limpieza de estado
 - [x] Guards en el router — redirige si no hay token
@@ -141,13 +156,13 @@ TaskFlowSPA/
 - [x] Cambiar rol de usuario (USER ↔ ADMIN)
 - [x] Eliminar usuario
 - [x] Ver, editar y eliminar las tareas de cualquier usuario
-- [x] Crear tareas en nombre de otro usuario
 - [x] Estadísticas globales: total usuarios, total tareas, completadas
 
 ### UI / UX
 - [x] Modo oscuro / claro con transición suave (persistido en `localStorage`)
 - [x] Selector de idioma ES / EN (persistido en `localStorage`)
 - [x] Diseño premium con glassmorphism y gradientes violeta/índigo
+- [x] Indicador de carga mientras el servidor responde
 - [x] Micro-animaciones (`fadeInUp`, `float`, `pulse-glow`)
 - [x] Modales temáticos con SweetAlert2
 - [x] Responsive — adaptado para móvil y escritorio
@@ -170,7 +185,32 @@ TaskFlowSPA/
 
 ---
 
-## Inicio rápido
+## Despliegue
+
+### Frontend → Vercel
+
+El cliente se despliega automáticamente desde la rama `main` del repositorio.
+
+- **Build command:** `npm run build`
+- **Output directory:** `dist`
+- **Root directory:** `client`
+- Vercel redespliega automáticamente con cada `git push`.
+
+### Backend → Render
+
+La API corre como un **Web Service** en Render apuntando a la carpeta `/api`.
+
+- **Start command:** `node server.js`
+- **Puerto:** definido por la variable de entorno `PORT` (Render lo inyecta automáticamente)
+- **URL pública:** `https://proyectohs-5.onrender.com`
+
+> ⚠️ **Limitación del plan gratuito de Render:** El servidor se suspende tras 15 minutos de inactividad. La primera petición después de un período de inactividad puede tardar hasta 60 segundos. La app muestra un indicador de carga durante ese tiempo.
+
+> ⚠️ **Persistencia de datos:** En el plan gratuito de Render, el sistema de archivos es efímero. Los usuarios nuevos registrados se perderán si el servidor se redespliega. Los datos iniciales provienen del `db.json` commiteado en el repositorio.
+
+---
+
+## Desarrollo local
 
 ### Requisitos previos
 
@@ -180,7 +220,7 @@ TaskFlowSPA/
 ### 1. Clonar el repositorio
 
 ```bash
-git clone <url-del-repositorio>
+git clone https://github.com/juanjo2409/proyectoHS.git
 cd TaskFlowSPA
 ```
 
@@ -189,7 +229,7 @@ cd TaskFlowSPA
 ```bash
 cd api
 npm install
-npx json-server db.json --port 3000 
+npm start
 ```
 
 El servidor queda corriendo en **http://localhost:3000**.
@@ -206,80 +246,23 @@ npm run dev
 
 La app queda disponible en **http://localhost:5173** (o el puerto que indique Vite).
 
+> 💡 En desarrollo local, cambia la variable `endpoint` / `API_URL` en los servicios de `http://localhost:3000` antes de correr el cliente.
+
 ### 4. Credenciales de prueba
 
-El archivo `api/db.json` contiene usuarios de ejemplo. Puedes registrar nuevos desde `/register`. El primer usuario con rol `ADMIN` puede ser creado directamente en `db.json`:
+El archivo `api/db.json` contiene usuarios de ejemplo con contraseñas hasheadas. Puedes registrar nuevos desde `/register`.
 
-```json
-{
-  "users": [
-    {
-      "id": "admin1",
-      "name": "Admin",
-      "lastName": "Principal",
-      "email": "admin@taskflow.com",
-      "password": "admin123",
-      "role": "ADMIN"
-    }
-  ],
-  "task": []
-}
-```
-
-> **Nota:** Las contraseñas en texto plano sólo funcionan para usuarios pre-cargados en `db.json`. Los usuarios creados desde `/register` tienen contraseñas hasheadas automáticamente.
-
----
-
-## Variables de entorno y configuración
-
-### API (`/api/server.js`)
-
-| Constante | Valor por defecto | Descripción |
-|---|---|---|
-| `SECRET_KEY` | `taskflow-super-secret-key-12345` | Clave para firmar/verificar JWT |
-| Puerto | `3000` | Puerto del servidor |
-
-> ⚠️ En producción cambia `SECRET_KEY` por una variable de entorno real.
-
-### Cliente (`/client`)
-
-El cliente apunta a `http://localhost:3000` como base URL de la API. Si cambias el puerto del backend, actualiza la constante en los archivos de servicio:
-
-```
-client/src/services/auth.service.js
-client/src/services/task.service.js
-client/src/services/users.service.js
-```
-
----
-
-## Arquitectura frontend
-
-La SPA sigue una **arquitectura por capas** limpia:
-
-```
-┌─────────────────────────────┐
-│          VISTAS             │  views/ — renderizado e interacción
-├─────────────────────────────┤
-│         SERVICIOS           │  services/ — comunicación con la API
-├─────────────────────────────┤
-│         UTILIDADES          │  utils/ — tema, i18n, helpers
-├─────────────────────────────┤
-│          ROUTER             │  router/ — navegación + guards
-├─────────────────────────────┤
-│     ESTILOS / DISEÑO        │  styles/ — sistema de diseño global
-└─────────────────────────────┘
-```
-
-**Principios clave:**
-- Cada vista exporta `render<Vista>()` (HTML string) y `setup<Vista>()` (event listeners).
-- El router inyecta el HTML en `#app` y luego llama al setup.
-- Los servicios centralizan todas las llamadas `fetch` y adjuntan el JWT automáticamente.
-- Las utilidades `theme.js` e `i18n.js` se re-inicializan en cada render de vista.
+| Email | Rol |
+|---|---|
+| `juanjosemn63@gmail.com` | ADMIN |
+| `kim3@gmail.com` | USER |
+| `robleskeyner8@gmail.com` | USER |
 
 ---
 
 ## API — Endpoints disponibles
+
+Base URL en producción: `https://proyectohs-5.onrender.com`
 
 | Método | Ruta | Auth | Descripción |
 |---|---|---|---|
@@ -302,28 +285,11 @@ La SPA sigue una **arquitectura por capas** limpia:
 
 | Clave | Contenido | Cuándo se borra |
 |---|---|---|
-| `user` | Objeto usuario + token JWT | Al cerrar sesión o eliminar cuenta |
+| `token` | JWT firmado por el servidor | Al cerrar sesión o expirar |
+| `user` | Objeto usuario (sin contraseña) | Al cerrar sesión o eliminar cuenta |
 | `theme` | `"dark"` \| `"light"` | Nunca (preferencia permanente) |
 | `lang` | `"es"` \| `"en"` | Nunca (preferencia permanente) |
-| `editTaskId` | ID de la tarea en edición | Al terminar de editar / cancelar |
-
----
-
-## Scripts disponibles
-
-### Frontend (`/client`)
-
-```bash
-npm run dev       # Servidor de desarrollo con HMR
-npm run build     # Build de producción en /dist
-npm run preview   # Vista previa del build
-```
-
-### Backend (`/api`)
-
-```bash
-npm start         # node server.js — API en puerto 3000
-```
+| `taskId` | ID de la tarea en edición | Al terminar de editar / cancelar |
 
 ---
 
