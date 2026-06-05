@@ -119,11 +119,23 @@ export function setupRegister() {
             Swal.fire({ icon: "warning", title: t("fields_incomplete"), text: t("register_incomplete_desc"), confirmButtonColor: "#7c3aed" });
             return;
         }
+
+        // Show loading while server wakes up (Render free tier can take ~30-60s)
+        Swal.fire({
+            title: "Creando cuenta...",
+            text: "Conectando con el servidor, por favor espera.",
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            didOpen: () => Swal.showLoading()
+        });
+        registerBtn.disabled = true;
+
         try {
             await crearUsuario({ name, lastName, email, password, role });
             Swal.fire({ icon: "success", title: t("register_success"), text: t("register_success_desc"), timer: 1500, showConfirmButton: false });
             setTimeout(() => navigate("/login"), 1000);
         } catch (error) {
+            registerBtn.disabled = false;
             Swal.fire({ icon: "error", title: t("register_error"), text: error.message || t("register_error_desc"), confirmButtonColor: "#7c3aed" });
         }
     });

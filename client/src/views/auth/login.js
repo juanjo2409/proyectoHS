@@ -101,16 +101,29 @@ export function setupLogin() {
         event.preventDefault();
         const email    = document.getElementById("email").value.trim();
         const password = document.getElementById("password").value.trim();
+        const submitBtn = form.querySelector("button[type='submit']");
 
         if (!email || !password) {
             Swal.fire({ icon: "warning", title: t("fields_incomplete"), text: t("fields_incomplete_desc"), confirmButtonColor: "#7c3aed" });
             return;
         }
+
+        // Show loading while server wakes up (Render free tier can take ~30-60s)
+        Swal.fire({
+            title: "Iniciando sesi\u00f3n...",
+            text: "Conectando con el servidor, por favor espera.",
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            didOpen: () => Swal.showLoading()
+        });
+        if (submitBtn) submitBtn.disabled = true;
+
         try {
             const user = await login(email, password);
             Swal.fire({ icon: "success", title: t("welcome_success", { name: user.name }), text: t("login_success"), timer: 1500, showConfirmButton: false });
             setTimeout(() => navigate("/dashboard"), 1000);
         } catch (error) {
+            if (submitBtn) submitBtn.disabled = false;
             Swal.fire({ icon: "error", title: t("auth_error"), text: error.message || t("auth_error_desc"), confirmButtonColor: "#7c3aed" });
         }
     });
