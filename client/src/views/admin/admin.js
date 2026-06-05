@@ -2,8 +2,8 @@ import { obtenerUsuarios, actualizarRolUsuario, eliminarUsuario } from "../../se
 import { obtenerUsuarioActual } from "../../services/auth.service.js";
 import { obtenerTareas, crearTarea, actualizarTarea, eliminarTarea } from "../../services/task.service.js";
 import { navigate } from "../../router/router.js";
-import { themeToggleButtonHtml, setupThemeToggle } from "../../utils/theme.js";
-import { t, getLangSelectHtml, setupLangSelect } from "../../utils/i18n.js";
+import { t } from "../../utils/i18n.js";
+import { renderHeader, setupHeader } from "../../components/Header.js";
 import Swal from "sweetalert2";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -14,25 +14,8 @@ export function renderAdmin() {
     return `
     <div class="bg-mesh min-h-screen text-slate-200">
 
-        <header class="app-header">
-            <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-                <a href="/" class="flex items-center gap-2">
-                    <div class="h-8 w-8 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-black text-sm shadow-lg">T</div>
-                    <span class="text-base font-black text-white">TaskFlow<span class="gradient-text">SPA</span></span>
-                </a>
-                <div class="flex items-center gap-2">
-                    <nav class="hidden gap-1 md:flex">
-                        <a href="/dashboard" class="btn-ghost rounded-xl px-4 py-2 text-sm font-semibold">${t("dashboard")}</a>
-                        <a href="/tasks"     class="btn-ghost rounded-xl px-4 py-2 text-sm font-semibold">${t("tasks")}</a>
-                        <a href="/profile"   class="btn-ghost rounded-xl px-4 py-2 text-sm font-semibold">${t("profile")}</a>
-                        <a href="/admin"     class="nav-active rounded-xl px-4 py-2 text-sm font-semibold">${t("admin")}</a>
-                        <a href="/login"     class="nav-logout btn-ghost text-red-400 hover:text-red-300 rounded-xl px-4 py-2 text-sm font-semibold">${t("logout")}</a>
-                    </nav>
-                    ${getLangSelectHtml()}
-                    ${themeToggleButtonHtml}
-                </div>
-            </div>
-        </header>
+        ${renderHeader("/admin")}
+
 
         <main class="mx-auto max-w-7xl px-6 py-10">
 
@@ -566,8 +549,7 @@ function setupEventDelegation(state, reloadAll) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export async function setupAdmin() {
-    setupThemeToggle();
-    setupLangSelect();
+    setupHeader();
 
     const currentUser = obtenerUsuarioActual();
 

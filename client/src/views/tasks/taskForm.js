@@ -1,7 +1,7 @@
 import { crearTarea, actualizarTarea, obtenerTareaPorId } from "../../services/task.service.js";
 import { navigate } from "../../router/router.js";
-import { themeToggleButtonHtml, setupThemeToggle } from "../../utils/theme.js";
-import { t, getLangSelectHtml, setupLangSelect } from "../../utils/i18n.js";
+import { t } from "../../utils/i18n.js";
+import { renderHeader, setupHeader } from "../../components/Header.js";
 import Swal from "sweetalert2";
 
 export function renderTaskForm() {
@@ -9,23 +9,8 @@ export function renderTaskForm() {
     <div class="bg-mesh min-h-screen text-slate-200">
 
         <!-- Header -->
-        <header class="app-header">
-            <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-                <a href="/" class="flex items-center gap-2">
-                    <div class="h-8 w-8 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-black text-sm shadow-lg">T</div>
-                    <span class="text-base font-black text-white">TaskFlow<span class="gradient-text">SPA</span></span>
-                </a>
-                <div class="flex items-center gap-2">
-                    <nav class="hidden gap-1 md:flex">
-                        <a href="/dashboard" class="btn-ghost rounded-xl px-4 py-2 text-sm font-semibold">${t("dashboard")}</a>
-                        <a href="/tasks"     class="btn-ghost rounded-xl px-4 py-2 text-sm font-semibold">${t("tasks")}</a>
-                        <a href="/profile"   class="btn-ghost rounded-xl px-4 py-2 text-sm font-semibold">${t("profile")}</a>
-                    </nav>
-                    ${getLangSelectHtml()}
-                    ${themeToggleButtonHtml}
-                </div>
-            </div>
-        </header>
+        ${renderHeader("/tasks")}
+
 
         <main class="mx-auto max-w-2xl px-6 py-12">
 
@@ -101,10 +86,18 @@ export function renderTaskForm() {
 }
 
 export async function setupTaskForm() {
-    setupThemeToggle();
-    setupLangSelect();
+    setupHeader();
     const user = JSON.parse(localStorage.getItem("user"));
     if (!user) { navigate("/login"); return; }
+
+    // Logout
+    document.querySelectorAll(".nav-logout").forEach(el => {
+        el.addEventListener("click", (e) => {
+            e.preventDefault();
+            localStorage.removeItem("user");
+            navigate("/login");
+        });
+    });
 
     const taskId     = localStorage.getItem("taskId");
     const form       = document.querySelector("form");

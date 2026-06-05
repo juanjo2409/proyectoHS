@@ -1,28 +1,13 @@
-import { themeToggleButtonHtml, setupThemeToggle } from "../utils/theme.js";
-import { t, getLangSelectHtml, setupLangSelect } from "../utils/i18n.js";
+import { t } from "../utils/i18n.js";
+import { renderHeader, setupHeader } from "../components/Header.js";
 
 export function renderHome() {
     return `
     <div class="bg-mesh min-h-screen text-slate-200">
 
         <!-- Header -->
-        <header class="app-header">
-            <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-                <a href="/" class="flex items-center gap-2 group">
-                    <div class="h-8 w-8 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-black text-sm shadow-lg group-hover:shadow-violet-500/50 transition-shadow">T</div>
-                    <span class="text-lg font-black tracking-tight text-white">TaskFlow<span class="gradient-text">SPA</span></span>
-                </a>
-                <div class="flex items-center gap-3">
-                    <nav class="hidden items-center gap-1 md:flex">
-                        <a href="/" class="btn-ghost">${t("home")}</a>
-                        <a href="/login" class="btn-ghost">${t("login")}</a>
-                        <a href="/register" class="btn-primary text-xs px-4 py-2">${t("register")}</a>
-                    </nav>
-                    ${getLangSelectHtml()}
-                    ${themeToggleButtonHtml}
-                </div>
-            </div>
-        </header>
+        ${renderHeader("/")}
+
 
         <main class="mx-auto max-w-7xl px-6 py-20">
 
@@ -109,6 +94,5 @@ export function renderHome() {
 }
 
 export function setupHome() {
-    setupThemeToggle();
-    setupLangSelect();
+    setupHeader();
 }

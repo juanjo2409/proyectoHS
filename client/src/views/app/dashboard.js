@@ -1,39 +1,16 @@
 import { obtenerTareas } from "../../services/task.service.js";
 import { obtenerUsuarioActual } from "../../services/auth.service.js";
 import { navigate } from "../../router/router.js";
-import { themeToggleButtonHtml, setupThemeToggle } from "../../utils/theme.js";
-import { t, getLangSelectHtml, setupLangSelect } from "../../utils/i18n.js";
-
-const navLink = (href, label, active = false) => `
-    <a href="${href}" class="${active ? "nav-active" : "btn-ghost"} rounded-xl px-4 py-2 text-sm font-semibold transition-all">
-        ${label}
-    </a>
-`;
+import { t } from "../../utils/i18n.js";
+import { renderHeader, setupHeader } from "../../components/Header.js";
 
 export function renderDashboard() {
     return `
     <div class="bg-mesh min-h-screen text-slate-200">
 
         <!-- Header -->
-        <header class="app-header">
-            <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-                <a href="/" class="flex items-center gap-2">
-                    <div class="h-8 w-8 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-black text-sm shadow-lg">T</div>
-                    <span class="text-base font-black text-white">TaskFlow<span class="gradient-text">SPA</span></span>
-                </a>
-                <div class="flex items-center gap-2">
-                    <nav class="hidden gap-1 md:flex">
-                        ${navLink("/dashboard", t("dashboard"), true)}
-                        ${navLink("/tasks", t("tasks"))}
-                        ${navLink("/profile", t("profile"))}
-                        <a href="/admin" class="btn-ghost rounded-xl px-4 py-2 text-sm font-semibold font-admin-link hidden">${t("admin")}</a>
-                        <a href="/login" class="nav-logout btn-ghost text-red-400 hover:text-red-300 rounded-xl px-4 py-2 text-sm font-semibold">${t("logout")}</a>
-                    </nav>
-                    ${getLangSelectHtml()}
-                    ${themeToggleButtonHtml}
-                </div>
-            </div>
-        </header>
+        ${renderHeader("/dashboard")}
+
 
         <main class="mx-auto max-w-7xl px-6 py-10">
 
@@ -114,20 +91,17 @@ export function renderDashboard() {
 }
 
 export async function setupDashboard() {
-    setupThemeToggle();
-    setupLangSelect();
+    setupHeader();
     const usuario = obtenerUsuarioActual();
     if (!usuario) { navigate("/login"); return; }
 
-    // Show admin link
-    const adminLink = document.querySelector(".font-admin-link");
-    if (adminLink && usuario.role === "ADMIN") adminLink.classList.remove("hidden");
-
     // Handle logout
-    document.querySelector(".nav-logout")?.addEventListener("click", (e) => {
-        e.preventDefault();
-        localStorage.removeItem("user");
-        navigate("/login");
+    document.querySelectorAll(".nav-logout").forEach(el => {
+        el.addEventListener("click", (e) => {
+            e.preventDefault();
+            localStorage.removeItem("user");
+            navigate("/login");
+        });
     });
 
     // Dynamic title

@@ -43,7 +43,7 @@ La aplicación cuenta con:
 
 - **Autenticación JWT** real contra un backend con `json-server`.
 - **Sistema de roles** — `USER` y `ADMIN` con permisos diferenciados.
-- **Registro con clave secreta** — para registrarse como ADMIN se requiere una clave.
+- **Registro con clave secreta** — para registrarse como ADMIN se requiere una clave, la clave es "riwi".
 - **Modo claro / oscuro** persistente en `localStorage`.
 - **Soporte multiidioma** Español / Inglés persistido en `localStorage`.
 - **Diseño premium** con glassmorphism, gradientes y micro-animaciones.
