@@ -4,25 +4,25 @@
 
 ![Frontend](https://img.shields.io/badge/Frontend-Vercel-black?logo=vercel)
 ![Backend](https://img.shields.io/badge/Backend-Render-46E3B7?logo=render)
-![License](https://img.shields.io/badge/License-MIT-violet)
+![License](https://img.shields.io/badge/Licencia-MIT-violet)
 
 ---
 
-## 🌐 Demo en producción
+## 🌐 Acceso en producción
 
 | Servicio | URL |
 |---|---|
-| 🖥️ **Frontend (Vercel)** | [taskflow-spa en Vercel](https://proyectohs.vercel.app) |
-| ⚙️ **Backend API (Render)** | https://proyectohs-5.onrender.com |
+| 🖥️ **Aplicación web (Vercel)** | **https://proyecto-hs.vercel.app** |
+| ⚙️ **API backend (Render)** | https://proyectohs-5.onrender.com |
 
-> ⚠️ El backend corre en **Render plan gratuito**. Si lleva un rato sin usarse, la primera petición puede tardar hasta **60 segundos** mientras el servidor despierta. Es normal — la app muestra un indicador de carga durante ese tiempo.
+> ⚠️ **Nota sobre el backend:** corre en el plan gratuito de Render. Si lleva un rato sin usarse, la primera petición puede tardar hasta **60 segundos** mientras el servidor despierta. La app muestra un indicador de carga durante ese tiempo — es completamente normal.
 
 ---
 
 ## Tabla de contenidos
 
 - [Descripción](#descripción)
-- [Demo en producción](#-demo-en-producción)
+- [Acceso en producción](#-acceso-en-producción)
 - [Rutas disponibles](#rutas-disponibles)
 - [Stack tecnológico](#stack-tecnológico)
 - [Estructura del proyecto](#estructura-del-proyecto)
@@ -31,7 +31,6 @@
 - [Despliegue](#despliegue)
 - [Desarrollo local](#desarrollo-local)
 - [API — Endpoints disponibles](#api--endpoints-disponibles)
-- [Persistencia en localStorage](#persistencia-en-localstorage)
 - [Licencia](#licencia)
 
 ---
@@ -42,10 +41,11 @@
 
 La aplicación cuenta con:
 
-- **Modo claro / oscuro** persistente (`localStorage`).
-- **Soporte multiidioma** Español / Inglés (`localStorage`).
 - **Autenticación JWT** real contra un backend con `json-server`.
-- **Panel de administración** con gestión completa de usuarios y tareas.
+- **Sistema de roles** — `USER` y `ADMIN` con permisos diferenciados.
+- **Registro con clave secreta** — para registrarse como ADMIN se requiere una clave.
+- **Modo claro / oscuro** persistente en `localStorage`.
+- **Soporte multiidioma** Español / Inglés persistido en `localStorage`.
 - **Diseño premium** con glassmorphism, gradientes y micro-animaciones.
 
 ---
@@ -61,7 +61,7 @@ La aplicación cuenta con:
 | Mis tareas | `/tasks` | USER / ADMIN |
 | Crear / Editar tarea | `/tasks/new` | USER / ADMIN |
 | Mi perfil | `/profile` | USER / ADMIN |
-| Panel Admin | `/admin` | ADMIN |
+| Panel Admin | `/admin` | Solo ADMIN |
 | 404 | `*` | — |
 
 ---
@@ -94,12 +94,12 @@ La aplicación cuenta con:
 
 ```
 TaskFlowSPA/
-├── api/                        # Backend fake con JWT → Render
-│   ├── server.js               # Servidor Express + json-server + JWT
+├── api/                        # Backend → desplegado en Render
+│   ├── server.js               # Servidor Express + json-server + JWT + guards de rol
 │   ├── db.json                 # Base de datos (usuarios y tareas)
 │   └── package.json
 │
-└── client/                     # SPA frontend → Vercel
+└── client/                     # SPA frontend → desplegada en Vercel
     ├── index.html
     ├── vite.config.ts
     ├── package.json
@@ -111,9 +111,9 @@ TaskFlowSPA/
         │   ├── router.js       # Router SPA con guards de autenticación y rol
         │   └── routes.js       # Definición de rutas y metadatos
         ├── services/
-        │   ├── auth.service.js     # Login, sesión activa (usa POST /login)
-        │   ├── task.service.js     # CRUD de tareas (usa /task)
-        │   └── users.service.js    # CRUD de usuarios (usa /users, /register)
+        │   ├── auth.service.js     # Login via POST /login, sesión con JWT
+        │   ├── task.service.js     # CRUD de tareas (GET/POST/PUT/DELETE /task)
+        │   └── users.service.js    # CRUD de usuarios (/users, POST /register)
         ├── utils/
         │   ├── theme.js        # Toggle modo oscuro/claro + initTheme
         │   └── i18n.js         # Traducciones ES/EN + getLangSelectHtml
@@ -138,35 +138,39 @@ TaskFlowSPA/
 ## Características implementadas
 
 ### Autenticación y sesión
-- [x] Registro con hash de contraseña (`bcryptjs`) — procesado en el servidor
-- [x] Login con generación de **JWT real** en el backend (expira en 2 h)
+- [x] Registro — el servidor hashea la contraseña con `bcryptjs`
+- [x] Login con JWT real generado por el servidor (expira en 2 h)
 - [x] Sesión persistida en `localStorage`
 - [x] Cierre de sesión con limpieza de estado
-- [x] Guards en el router — redirige si no hay token
+- [x] Guards en el router — redirige si no hay token válido
+
+### Sistema de roles
+- [x] Al registrarse se elige rol `USER` o `ADMIN`
+- [x] Si se elige `ADMIN`, el formulario pide una **clave secreta**
+- [x] La clave se valida en el servidor — no puede saltarse desde el cliente
+- [x] El panel `/admin` es exclusivo para usuarios con rol `ADMIN`
 
 ### Tareas (CRUD completo)
 - [x] Crear tarea con título, descripción, fecha límite y estado
 - [x] Editar tarea existente (formulario reutilizable)
 - [x] Eliminar tarea con confirmación
 - [x] Filtrar tareas por estado (Pendiente / En progreso / Completada)
-- [x] La API asigna automáticamente `userId` al crear si el rol es USER
+- [x] La API filtra automáticamente por `userId` si el rol es `USER`
 
 ### Panel de administración
 - [x] Ver todos los usuarios con sus estadísticas
 - [x] Cambiar rol de usuario (USER ↔ ADMIN)
 - [x] Eliminar usuario
 - [x] Ver, editar y eliminar las tareas de cualquier usuario
-- [x] Estadísticas globales: total usuarios, total tareas, completadas
+- [x] Estadísticas globales
 
 ### UI / UX
-- [x] Modo oscuro / claro con transición suave (persistido en `localStorage`)
-- [x] Selector de idioma ES / EN (persistido en `localStorage`)
+- [x] Modo oscuro / claro con transición suave
+- [x] Selector de idioma ES / EN
+- [x] Indicador de carga mientras el servidor despierta (Render free tier)
 - [x] Diseño premium con glassmorphism y gradientes violeta/índigo
-- [x] Indicador de carga mientras el servidor responde
-- [x] Micro-animaciones (`fadeInUp`, `float`, `pulse-glow`)
-- [x] Modales temáticos con SweetAlert2
-- [x] Responsive — adaptado para móvil y escritorio
-- [x] Página 404 personalizada
+- [x] Micro-animaciones y modales con SweetAlert2
+- [x] Responsive — móvil y escritorio
 
 ---
 
@@ -176,6 +180,7 @@ TaskFlowSPA/
 - Acceso completo a todos los endpoints de la API.
 - Puede listar, crear, editar y eliminar cualquier usuario o tarea.
 - Acceso exclusivo al panel `/admin`.
+- Para registrarse como ADMIN se requiere una **clave secreta**.
 
 ### `USER`
 - Solo puede ver y modificar sus propias tareas.
@@ -189,30 +194,40 @@ TaskFlowSPA/
 
 ### Frontend → Vercel
 
+URL: **https://proyecto-hs.vercel.app**
+
 El cliente se despliega automáticamente desde la rama `main` del repositorio.
 
-- **Build command:** `npm run build`
-- **Output directory:** `dist`
-- **Root directory:** `client`
-- Vercel redespliega automáticamente con cada `git push`.
+| Parámetro | Valor |
+|---|---|
+| Framework preset | Vite |
+| Root directory | `client` |
+| Build command | `npm run build` |
+| Output directory | `dist` |
+
+Cada `git push` a `main` lanza un redespliegue automático en Vercel.
 
 ### Backend → Render
 
-La API corre como un **Web Service** en Render apuntando a la carpeta `/api`.
+URL: **https://proyectohs-5.onrender.com**
 
-- **Start command:** `node server.js`
-- **Puerto:** definido por la variable de entorno `PORT` (Render lo inyecta automáticamente)
-- **URL pública:** `https://proyectohs-5.onrender.com`
+La API corre como **Web Service** en Render apuntando a la carpeta `/api`.
 
-> ⚠️ **Limitación del plan gratuito de Render:** El servidor se suspende tras 15 minutos de inactividad. La primera petición después de un período de inactividad puede tardar hasta 60 segundos. La app muestra un indicador de carga durante ese tiempo.
+| Parámetro | Valor |
+|---|---|
+| Root directory | `api` |
+| Start command | `node server.js` |
+| Puerto | Variable `PORT` inyectada por Render |
 
-> ⚠️ **Persistencia de datos:** En el plan gratuito de Render, el sistema de archivos es efímero. Los usuarios nuevos registrados se perderán si el servidor se redespliega. Los datos iniciales provienen del `db.json` commiteado en el repositorio.
+> ⚠️ **Plan gratuito de Render:** el servidor se suspende tras 15 minutos de inactividad. La primera petición puede tardar hasta 60 segundos. La aplicación muestra un spinner de carga durante ese tiempo.
+
+> ⚠️ **Persistencia de datos:** el sistema de archivos en Render free tier es efímero — los datos nuevos se pierden al redesplegar. Los datos base provienen del `api/db.json` commiteado en el repositorio.
 
 ---
 
 ## Desarrollo local
 
-### Requisitos previos
+### Requisitos
 
 - **Node.js** ≥ 18
 - **npm** ≥ 9
@@ -224,17 +239,16 @@ git clone https://github.com/juanjo2409/proyectoHS.git
 cd TaskFlowSPA
 ```
 
-### 2. Levantar el backend (API)
+### 2. Levantar el backend
 
 ```bash
 cd api
 npm install
 npm start
+# API corriendo en http://localhost:3000
 ```
 
-El servidor queda corriendo en **http://localhost:3000**.
-
-### 3. Levantar el frontend (cliente)
+### 3. Levantar el frontend
 
 Abre una segunda terminal:
 
@@ -242,15 +256,14 @@ Abre una segunda terminal:
 cd client
 npm install
 npm run dev
+# App en http://localhost:5173
 ```
 
-La app queda disponible en **http://localhost:5173** (o el puerto que indique Vite).
+> 💡 Para desarrollo local, cambia la variable `API_URL` / `endpoint` en los archivos de servicios de `https://proyectohs-5.onrender.com` a `http://localhost:3000`.
 
-> 💡 En desarrollo local, cambia la variable `endpoint` / `API_URL` en los servicios de `http://localhost:3000` antes de correr el cliente.
+### 4. Usuarios de prueba
 
-### 4. Credenciales de prueba
-
-El archivo `api/db.json` contiene usuarios de ejemplo con contraseñas hasheadas. Puedes registrar nuevos desde `/register`.
+Los usuarios vienen en `api/db.json` con contraseñas ya hasheadas. Para saber las contraseñas, regístralos de nuevo o edita el `db.json` localmente.
 
 | Email | Rol |
 |---|---|
@@ -267,7 +280,7 @@ Base URL en producción: `https://proyectohs-5.onrender.com`
 | Método | Ruta | Auth | Descripción |
 |---|---|---|---|
 | `POST` | `/login` | ❌ | Autenticación — devuelve JWT + usuario |
-| `POST` | `/register` | ❌ | Registro — hashea contraseña y crea usuario |
+| `POST` | `/register` | ❌ | Registro — hashea contraseña; acepta `adminKey` para rol ADMIN |
 | `GET` | `/users` | ✅ ADMIN | Listar todos los usuarios |
 | `GET` | `/users/:id` | ✅ | Ver usuario por ID |
 | `PUT` | `/users/:id` | ✅ | Actualizar usuario (propio o cualquiera si ADMIN) |
@@ -278,18 +291,6 @@ Base URL en producción: `https://proyectohs-5.onrender.com`
 | `DELETE` | `/task/:id` | ✅ | Eliminar tarea |
 
 > Todas las rutas protegidas requieren el header `Authorization: Bearer <token>`.
-
----
-
-## Persistencia en localStorage
-
-| Clave | Contenido | Cuándo se borra |
-|---|---|---|
-| `token` | JWT firmado por el servidor | Al cerrar sesión o expirar |
-| `user` | Objeto usuario (sin contraseña) | Al cerrar sesión o eliminar cuenta |
-| `theme` | `"dark"` \| `"light"` | Nunca (preferencia permanente) |
-| `lang` | `"es"` \| `"en"` | Nunca (preferencia permanente) |
-| `taskId` | ID de la tarea en edición | Al terminar de editar / cancelar |
 
 ---
 

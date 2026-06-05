@@ -1,47 +1,50 @@
 # TaskFlow SPA — API Backend
 
-> Backend REST con autenticación JWT y hash de contraseñas — desplegado en **Render**.
+> Backend REST con autenticación JWT, hash de contraseñas y control de roles — desplegado en **Render**.
 
 ![Deploy](https://img.shields.io/badge/Desplegado%20en-Render-46E3B7?logo=render)
 
-**URL en producción:** `https://proyectohs-5.onrender.com`
+**🌐 URL en producción:** `https://proyectohs-5.onrender.com`
+
+> ⚠️ Plan gratuito de Render: el servidor se suspende tras 15 min de inactividad. La primera petición puede tardar hasta **60 segundos**. La app frontend muestra un spinner durante ese tiempo.
 
 ---
 
 ## 🛠️ Stack Tecnológico
 
-- **Runtime:** Node.js (v18+)
-- **Base de datos:** `json-server` v0.17 (mapea `db.json` a endpoints REST)
-- **Autenticación:** `jsonwebtoken` (firma y verifica tokens JWT — 2h de expiración)
-- **Seguridad:** `bcryptjs` (hashing seguro de contraseñas con salt 10)
-- **CORS:** `cors` (habilitado para permitir peticiones del frontend en Vercel)
+| Tecnología | Versión | Rol |
+|---|---|---|
+| Node.js | ≥18 | Entorno de ejecución |
+| json-server | ^0.17.4 | Base de datos fake en `db.json` |
+| jsonwebtoken | ^9.0 | Firma y verificación de JWT (2h) |
+| bcryptjs | ^3.0 | Hash seguro de contraseñas (salt 10) |
+| cors | ^2.8 | Habilita peticiones cross-origin desde Vercel |
 
 ---
 
 ## 🚀 Despliegue en Render
 
-La API está desplegada como **Web Service** en Render.
-
-| Configuración | Valor |
+| Parámetro | Valor |
 |---|---|
-| Start command | `node server.js` |
 | Root directory | `api` |
-| Puerto | Inyectado por Render vía `PORT` |
+| Start command | `node server.js` |
+| Puerto | Variable `PORT` inyectada automáticamente por Render |
 | URL pública | `https://proyectohs-5.onrender.com` |
 
-> ⚠️ **Plan gratuito:** El servidor se suspende tras 15 min de inactividad. La primera petición puede tardar hasta 60 segundos mientras despierta.
+Cada `git push` a `main` redesplega automáticamente.
 
-> ⚠️ **Datos efímeros:** En el plan gratuito, el sistema de archivos se resetea con cada redespliegue. Los datos persisten solo mientras el servidor está corriendo. Los datos base provienen del `db.json` commiteado en el repo.
+> ⚠️ **Datos efímeros:** el sistema de archivos de Render free tier se resetea con cada redespliegue. Los datos base vienen del `db.json` commiteado en el repositorio.
 
 ---
 
 ## 📝 Base de Datos (`db.json`)
 
-El archivo `db.json` actúa como base de datos y almacena:
-- **`users`**: Colección de usuarios. Las contraseñas se guardan hasheadas con Bcrypt.
-- **`task`**: Colección de tareas vinculadas a su propietario mediante `userId`.
+El archivo `db.json` es la base de datos del servidor y contiene dos colecciones:
 
-Datos iniciales incluidos en el repo (contraseñas hasheadas con bcrypt):
+- **`users`** — usuarios con contraseñas hasheadas por bcrypt.
+- **`task`** — tareas vinculadas a su propietario vía `userId`.
+
+Usuarios incluidos por defecto:
 
 | Email | Rol |
 |---|---|
@@ -53,30 +56,45 @@ Datos iniciales incluidos en el repo (contraseñas hasheadas con bcrypt):
 
 ## 🔒 Flujo de Autenticación y Autorización
 
-El archivo [server.js](./server.js) implementa tres capas de seguridad:
-
 ### 1. Endpoints Públicos (sin token)
-- `POST /register`: Hashea la contraseña con `bcrypt.hashSync(password, 10)` y guarda el usuario con rol `USER` por defecto.
-- `POST /login`: Valida credenciales, genera y firma un JWT (`expiresIn: '2h'`), devuelve el token y datos del usuario sin contraseña.
 
-### 2. Middleware de Verificación JWT
-Cualquier ruta fuera de `/login` y `/register` requiere `Authorization: Bearer <token>`. El servidor decodifica el token y añade el usuario a `req.user`.
+**`POST /register`**
+- Recibe: `name`, `lastName`, `email`, `password`, `adminKey` (opcional)
+- Hashea la contraseña con `bcrypt.hashSync(password, 10)`
+- Si `adminKey === 'riwi'` → asigna rol `ADMIN`; de lo contrario → `USER`
+- Devuelve el usuario creado sin contraseña
 
-### 3. Middleware de Roles y Permisos (prevención IDOR)
-- **`/users`:** Un `USER` solo puede consultar/editar/eliminar su propio registro. Un `ADMIN` tiene acceso total.
-- **`/task`:** Los `GET` de un `USER` se filtran automáticamente por `userId`. Los `PUT`/`DELETE` verifican que la tarea pertenezca al usuario autenticado.
+**`POST /login`**
+- Recibe: `email`, `password`
+- Busca el usuario, compara contraseña con bcrypt
+- Genera y firma un JWT con `expiresIn: '2h'`
+- Devuelve `{ token, user }` (sin contraseña)
+
+### 2. Middleware JWT (todas las demás rutas)
+Verifica el header `Authorization: Bearer <token>`. Si el token es inválido o expirado devuelve `401`.
+
+### 3. Middleware de Roles (prevención de IDOR)
+
+**`/users`**
+- `ADMIN` → acceso total (listar, ver, editar, eliminar cualquier usuario)
+- `USER` → solo puede ver/editar/eliminar su propio registro
+
+**`/task`**
+- `GET` de un `USER` → el servidor inyecta `?userId=<id>` automáticamente
+- `PUT`/`DELETE` → verifica que la tarea pertenezca al usuario; si no, devuelve `403`
+- `POST` de un `USER` → el servidor sobreescribe `userId` con el del token
 
 ---
 
-## 📡 Endpoints de la API
+## 📡 Endpoints
 
 Base URL: `https://proyectohs-5.onrender.com`
 
-| Método | Endpoint | Auth requerida | Permiso | Descripción |
+| Método | Endpoint | Auth | Permiso | Descripción |
 |---|---|---|---|---|
-| `POST` | `/login` | ❌ | Público | Valida credenciales y entrega JWT |
-| `POST` | `/register` | ❌ | Público | Registra usuario con contraseña hasheada |
-| `GET` | `/users` | ✅ | `ADMIN` | Lista todos los usuarios |
+| `POST` | `/login` | ❌ | Público | Valida credenciales y devuelve JWT |
+| `POST` | `/register` | ❌ | Público | Crea usuario; acepta `adminKey` para rol ADMIN |
+| `GET` | `/users` | ✅ | ADMIN | Lista todos los usuarios |
 | `GET` | `/users/:id` | ✅ | ADMIN o Propietario | Obtiene un usuario |
 | `PUT` | `/users/:id` | ✅ | ADMIN o Propietario | Actualiza usuario |
 | `DELETE` | `/users/:id` | ✅ | ADMIN o Propietario | Elimina usuario |
@@ -94,15 +112,15 @@ Base URL: `https://proyectohs-5.onrender.com`
 cd api
 npm install
 npm start
-# Servidor en http://localhost:3000
+# API en http://localhost:3000
 ```
 
-> Recuerda actualizar la `API_URL` en los servicios del cliente para que apunten a `http://localhost:3000` en lugar de la URL de Render.
+Recuerda cambiar la `API_URL` en los servicios del cliente a `http://localhost:3000` para trabajar en local.
 
 ---
 
 ## Scripts
 
 ```bash
-npm start   # node server.js — inicia la API
+npm start   # node server.js
 ```
