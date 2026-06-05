@@ -75,7 +75,7 @@ server.post('/register', (req, res) => {
     lastName,
     email,
     password: hashedPassword,
-    role: role || 'USER',
+    role: 'USER', // Role is always USER on registration; promote via admin panel
     id
   };
 

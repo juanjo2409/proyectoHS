@@ -75,18 +75,9 @@ export function renderRegister() {
                             <input id="register-email" type="email" placeholder="usuario@correo.com" class="field" />
                         </div>
 
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">${t("password")}</label>
-                                <input id="register-password" type="password" placeholder="••••••••" class="field" />
-                            </div>
-                            <div>
-                                <label class="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">${t("role")}</label>
-                                <select id="register-role" class="field">
-                                    <option value="USER">USER</option>
-                                    <option value="ADMIN">ADMIN</option>
-                                </select>
-                            </div>
+                        <div>
+                            <label class="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">${t("password")}</label>
+                            <input id="register-password" type="password" placeholder="••••••••" class="field" />
                         </div>
 
                         <button id="register-btn" type="button" class="btn-primary w-full">
@@ -113,7 +104,7 @@ export function setupRegister() {
         const lastName = document.getElementById("register-lastname").value.trim();
         const email    = document.getElementById("register-email").value.trim();
         const password = document.getElementById("register-password").value.trim();
-        const role     = document.getElementById("register-role").value;
+        const role     = "USER"; // Only admins can promote roles from the admin panel
 
         if (!name || !lastName || !email || !password) {
             Swal.fire({ icon: "warning", title: t("fields_incomplete"), text: t("register_incomplete_desc"), confirmButtonColor: "#7c3aed" });
