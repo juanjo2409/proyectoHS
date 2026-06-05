@@ -53,7 +53,7 @@ server.post('/login', (req, res) => {
 
 // Custom Register endpoint (so we hash passwords when creating a user)
 server.post('/register', (req, res) => {
-  const { name, lastName, email, password, role } = req.body;
+  const { name, lastName, email, password, adminKey } = req.body;
   if (!name || !lastName || !email || !password) {
     return res.status(400).json({ message: 'Faltan campos obligatorios' });
   }
@@ -66,16 +66,20 @@ server.post('/register', (req, res) => {
   }
 
   const hashedPassword = bcrypt.hashSync(password, 10);
-  
+
   // Custom ID generation similar to what json-server does
   const id = Math.random().toString(36).substring(2, 9);
-  
+
+  // Assign ADMIN role only if the correct secret key is provided
+  const ADMIN_SECRET = 'riwi';
+  const assignedRole = (adminKey && adminKey === ADMIN_SECRET) ? 'ADMIN' : 'USER';
+
   const newUser = {
     name,
     lastName,
     email,
     password: hashedPassword,
-    role: 'USER', // Role is always USER on registration; promote via admin panel
+    role: assignedRole,
     id
   };
 

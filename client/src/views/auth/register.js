@@ -80,6 +80,16 @@ export function renderRegister() {
                             <input id="register-password" type="password" placeholder="••••••••" class="field" />
                         </div>
 
+                        <!-- Admin secret key (optional) -->
+                        <div class="relative">
+                            <label class="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                <svg class="h-3.5 w-3.5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                Clave de administrador <span class="normal-case text-slate-500 font-normal">(opcional)</span>
+                            </label>
+                            <input id="register-adminkey" type="password" placeholder="Solo si eres administrador" class="field" />
+                            <p class="mt-1.5 text-xs text-slate-500">Déjala en blanco para registrarte como usuario normal.</p>
+                        </div>
+
                         <button id="register-btn" type="button" class="btn-primary w-full">
                             <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
                             ${t("register_btn")}
@@ -104,7 +114,7 @@ export function setupRegister() {
         const lastName = document.getElementById("register-lastname").value.trim();
         const email    = document.getElementById("register-email").value.trim();
         const password = document.getElementById("register-password").value.trim();
-        const role     = "USER"; // Only admins can promote roles from the admin panel
+        const adminKey = document.getElementById("register-adminkey").value.trim();
 
         if (!name || !lastName || !email || !password) {
             Swal.fire({ icon: "warning", title: t("fields_incomplete"), text: t("register_incomplete_desc"), confirmButtonColor: "#7c3aed" });
@@ -122,8 +132,9 @@ export function setupRegister() {
         registerBtn.disabled = true;
 
         try {
-            await crearUsuario({ name, lastName, email, password, role });
-            Swal.fire({ icon: "success", title: t("register_success"), text: t("register_success_desc"), timer: 1500, showConfirmButton: false });
+            const newUser = await crearUsuario({ name, lastName, email, password, adminKey: adminKey || undefined });
+            const roleMsg = newUser.role === "ADMIN" ? " ¡Bienvenido, Administrador!" : "";
+            Swal.fire({ icon: "success", title: t("register_success") + roleMsg, text: t("register_success_desc"), timer: 1800, showConfirmButton: false });
             setTimeout(() => navigate("/login"), 1000);
         } catch (error) {
             registerBtn.disabled = false;
