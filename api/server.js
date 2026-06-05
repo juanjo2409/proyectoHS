@@ -1,7 +1,7 @@
 const jsonServer = require('json-server');
 const server = jsonServer.create();
 const router = jsonServer.router('db.json');
-const middlewares = jsonServer.defaults();
+const middlewares = [];
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const cors = require('cors');
@@ -11,7 +11,7 @@ const SECRET_KEY = 'taskflow-super-secret-key-12345';
 // Enable CORS
 server.use(cors());
 server.use(jsonServer.bodyParser);
-server.use(middlewares);
+// server.use(middlewares);
 
 // Custom Login endpoint
 server.post('/login', (req, res) => {
