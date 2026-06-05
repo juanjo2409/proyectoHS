@@ -1,0 +1,63 @@
+{
+  "users": [
+    {
+      "name": "juan",
+      "lastName": "maldonado",
+      "email": "juanjosemn63@gmail.com",
+      "password": "$2b$10$pl7uV/eNl1XwTkLNAA32Fe4lldZn1sjUuEycyTT.T6/q04DYD6Ax6",
+      "role": "ADMIN",
+      "id": "54QV2lkOdhQ"
+    },
+    {
+      "name": "kimberly",
+      "lastName": "navarro",
+      "email": "kim3@gmail.com",
+      "password": "$2b$10$4bAGVVIf2YCbLHMZLnihoO./Hfja7pgs2/4dP3/rDMtRKIe7o6ila",
+      "role": "USER",
+      "id": "5hUKqs_5ACk"
+    },
+    {
+      "name": "keyner",
+      "lastName": "robles",
+      "email": "robleskeyner8@gmail.com",
+      "password": "$2b$10$LBKcUNSxhZLtzAw4IOopjOh9z9VOISZ/C50DWUgYd4dx8QJZkjlAO",
+      "role": "USER",
+      "id": "zaFl3VhgRrc"
+    }
+  ],
+  "task": [
+    {
+      "title": "clase",
+      "description": "clase para hoy",
+      "status": "Pendiente",
+      "date": "2026-06-09",
+      "userId": "54QV2lkOdhQ",
+      "id": "lneaG_dU7gc"
+    },
+    {
+      "title": "juan",
+      "description": "Nueva tarea",
+      "status": "Pendiente",
+      "date": "2026-06-03",
+      "userId": "54QV2lkOdhQ",
+      "id": "qeEPjvB23Po"
+    },
+    {
+      "title": "juan ",
+      "description": "kim",
+      "status": "Completada",
+      "date": "2026-06-03",
+      "userId": "5hUKqs_5ACk",
+      "id": "7qrB09xdSqQ"
+    },
+    {
+      "title": "mantenimientos",
+      "description": "realizacion de mantenimientos preventivos",
+      "status": "Completada",
+      "date": "2026-06-03",
+      "userId": "zaFl3VhgRrc",
+      "id": "QinCDkmLtJA"
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
+}
